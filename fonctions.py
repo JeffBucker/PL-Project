@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-
+import matplotlib.pyplot as plt
 
 # Fonction pour enrichir df_players avec les données des n derniers matchs
 
@@ -29,7 +29,7 @@ def enrich_players_with_last_n_matches_data(df_players, n_last_matches=4):
                 points_avg = sum(float(g.get('total_points', 0)) for g in recent_games) / len(recent_games)
 
             else:
-                minutes_avg = xgi_avg = xg_avg = ict_avg = points_avg = pointxGI_avg = 0.0
+                minutes_avg = xgi_avg = xg_avg = ict_avg = points_avg = 0.0
 
             # Mise à jour dans df_players
             df_players.at[idx, 'minutes_last'] = minutes_avg
@@ -47,3 +47,25 @@ def enrich_players_with_last_n_matches_data(df_players, n_last_matches=4):
     return df_players
 
 
+#   Transfer in et out sur les n derniers matchs
+
+def get_recent_transfers(df_players, n_last_matches=4):
+    transfer_data = []
+
+    for player_id in df_players['id']:
+        url = f"https://fantasy.premierleague.com/api/element-summary/{player_id}/"
+        resp = requests.get(url).json()
+        history = resp.get('history', [])[-n_last_matches:]  # Derniers n matchs
+
+        # Somme des transfers_in et transfers_out sur ces matchs
+        transfers_in = sum(int(match.get('transfers_in', 0)) for match in history)
+        transfers_out = sum(int(match.get('transfers_out', 0)) for match in history)
+
+        transfer_data.append({
+            'id': player_id,
+            'web_name': df_players.loc[df_players['id'] == player_id, 'web_name'].values[0],
+            'transfers_in': transfers_in,
+            'transfers_out': transfers_out
+        })
+
+    return pd.DataFrame(transfer_data)
