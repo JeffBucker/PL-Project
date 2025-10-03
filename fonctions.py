@@ -60,12 +60,14 @@ def get_recent_transfers(df_players, n_last_matches=4):
         # Somme des transfers_in et transfers_out sur ces matchs
         transfers_in = sum(int(match.get('transfers_in', 0)) for match in history)
         transfers_out = sum(int(match.get('transfers_out', 0)) for match in history)
+        total_transfers = transfers_in + transfers_out
 
         transfer_data.append({
             'id': player_id,
             'web_name': df_players.loc[df_players['id'] == player_id, 'web_name'].values[0],
             'transfers_in': transfers_in,
-            'transfers_out': transfers_out
+            'transfers_out': transfers_out,
+            'total_transfers': total_transfers
         })
 
     return pd.DataFrame(transfer_data)
